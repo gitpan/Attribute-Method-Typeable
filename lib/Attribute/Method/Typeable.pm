@@ -8,44 +8,73 @@
 =head1 SYNOPSIS
 
     package MyClass;
-    
-	use mixin qw{  Attribute::Method::Typeable };
+
+    use mixin qw{  Attribute::Method::Typeable };
 
     #or
+
     use base qw{ Attribute::Method::Typeable };
-    
-    sub myMethod :Public {
-    my $self = shift;
-    # methody stuff here.
+
+    sub myMethod :Public( int int ) {
+        my $self = shift;
+        my ($a, $b) = @_;
+        return $a + $b;
     }
-    
+
     sub otherMethod :Public( OtherClass SomeClass ) {
-    my $self = shift;
-    my ($obj1, $obj2) = @_;
-    # methody stuff here.
+        my $self = shift;
+        my ($obj1, $obj2) = @_;
+        # methody stuff here.
     }
-    
-    sub privateMethod :Private( scalar ) {
-    my $self = shift;
-    my $val = shift;
-    
-    # methody stuff.
+
+    sub privateMethod :Private( scalar, Scalar, SCALAR ) {
+        my $self = shift;
+        my $literal = shift;
+        my $litOrRef = shift;
+        my $scalarRef = shift;
+
+        # methody stuff.
     }
-    
-    sub protectedMethod :Protected {
-    my $self = shift;
-    # methody stuff.
+
+    sub protectedMethod :Protected( other ) {
+        my $self = shift;
+        my $anything = shift;
+        # methody stuff.
     }
-    
-    sub functiony :Function {
-    # functiony stuff here.
+
+    sub functiony :Function( ARRAY, CODE, HASH ) {
+        # functiony stuff here.
+        my ($arrayRef, $codeRef, $hashRef) = @_;
     }
-    
-    sub functionz :Function( Scalar ARRAY o list ) {
-    my ($arg1, $arg2, @else) = @_;
-    $arg2->[0] = $arg1;
-    # other functiony stuff.
+
+    sub functionz :Function( float ARRAY o list ) {
+        my ($arg1, $arg2, @else) = @_;
+        $arg2->[0] = $arg1;
+        if(scalar(@else)) {}
+        # other functiony stuff.
     }
+
+    ### In your code:
+
+    # okay:
+    $object->myMethod( 1, 2 );
+
+    # throws an Exception::ParamError exception:
+    $object->myMethod( 1, "apple" );
+
+    # also throws an Exception::ParamError exception:
+    $object->myMethod( 7 );
+
+    # throws an Exception::MethodError exception:
+    myMethod('MyClass', 3, 4 );
+
+    # also throws an Exception::MethodError exception
+    # unless it's in MyClass:
+    $object->privateMethod( OtherClass->new, SomeClass->new );
+
+    # also throws an Exception::MethodError exception
+    # unless it's in MyClass or a subclass of MyClass:
+    $object->protectedMethod( $thingy );
 
 =head1 EXPORTS
 
@@ -53,13 +82,13 @@ Nothing by default.
 
 =head1 REQUIRES
 
-perl version 5.6.0, Attribute::Handlers, Data::Types, Test::SimpleUnit, Scalar::Util, Hook::WrapSub, Exception::Class, and optionally the mixin modules.
+perl version 5.8.0, Attribute::Handlers, Data::Types, Test::SimpleUnit, Scalar::Util, Hook::WrapSub, Exception::Class, and optionally the mixin modules.
 
 =head1 DESCRIPTION
 
 This module implements a number of attribute handlers for use in argument checking.
 It provides attributes which differentiate between functions, public methods, protected methods, and private methods.
-It throws an exception in the case of an incorrect usage.
+It throws an exception in the case of an incorrect usage.  Basically, these exceptions are meant to alert you of an incorrect calling of your methods or functions.  Use of these attributes is also self-documenting.
 
 =head1 ATTRIBUTES
 
@@ -105,7 +134,7 @@ The arguments to the attributes are specified within parenthesis.  The arguments
 
 This specifies that the argument must be of whole number type, that is it must be a counting number.
 
-=head2 integer
+=head2 int/integer
 
 This specifies that the argument must be of integer number type, that means it includes zero and negative numbers.
 
@@ -175,7 +204,9 @@ See SYNOPSIS.
 
 =head1 TODO
 
-Somehow come up with an attribute syntax for return values that doesn't look lame, then implement said return argument checking.
+Make a simple utility which turns the Attribute Enhanced code into comments for production ready code.
+
+Get the stack trace to start from before the method is called (ie take out all of the Attribute::Method::Typeable calls off the top).
 
 And a syntax for alterations (SomeClass|OtherClass) and lists list(Thingy).
 
@@ -205,13 +236,14 @@ BEGIN {
 	require 5.006_001;
     use vars qw{$VERSION $RCSID};
   
-    $VERSION    = do { my @r = (q$Revision: 1.7 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
-    $RCSID      = q$Id: Typeable.pm,v 1.7 2004/08/30 23:58:03 phaedrus Exp $;
+    $VERSION    = do { my @r = (q$Revision: 1.8 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+    $RCSID      = q$Id: Typeable.pm,v 1.8 2004/10/15 00:21:31 phaedrus Exp $;
 
 	# Ah, blessed...
     use Scalar::Util qw{blessed};
 
 	use Exception::Class ('Exception',
+						  'Exception::RuntimeError' => {isa => 'Exception'},
 						  'Exception::MethodError' => {isa => 'Exception'},
 						  'Exception::ParamError'  => {isa => 'Exception'},
 						  );
@@ -426,6 +458,7 @@ sub argumentCheck {
 							 literal	=> 'literalHandler',
 							 whole		=> 'wholeHandler',
 							 integer	=> 'integerHandler',
+							 int        => 'integerHandler',
 							 decimal	=> 'decimalHandler',
 							 real		=> 'realHandler',
 							 float		=> 'floatHandler',
@@ -453,11 +486,11 @@ sub argumentCheck {
 			no strict 'refs';
 			&{$handlerSub}($subroutine, \@arguments, \@attributes, $optional);
 		} else { # no arguments.
-			throw Exception::ParamError "$subroutine: Argument number $dracula is a required argument of type $attributes[0]." unless($optional);
+			throw Exception::ParamError(error => "$subroutine: Argument number $dracula is a required argument of type $attributes[0].\n", show_trace => 1) unless($optional);
 		}
 	} else { # we don't have any more attributes
 		if(scalar(@arguments)){
-			throw Exception::ParamError "$subroutine: Too many arguments.";
+			throw Exception::ParamError(error => "$subroutine: Too many arguments.\n", show_trace => 1);
 		}
 	}
 	$dracula = 1;
@@ -470,7 +503,7 @@ sub literalHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be an l-value (literal)." if(ref($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be an l-value (literal).\n", show_trace => 1) if(ref($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -484,7 +517,7 @@ sub scalarHandler {
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
 	if(ref($argument)) {
-		throw Exception::ParamError "$sub: Argument number $dracula must be a scalar reference or l-value (literal)." unless(ref($argument) eq 'SCALAR');
+		throw Exception::ParamError(error => "$sub: Argument number $dracula must be a scalar reference or l-value (literal).\n", show_trace => 1) unless(ref($argument) eq 'SCALAR');
 	}
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
@@ -498,7 +531,7 @@ sub integerHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be an integer." unless(is_int($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be an integer.\n", show_trace => 1) unless(is_int($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -511,7 +544,7 @@ sub floatHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a float." unless(is_float($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a float.\n", show_trace => 1) unless(is_float($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -524,7 +557,7 @@ sub wholeHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a whole number." unless(is_whole($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a whole number.\n", show_trace => 1) unless(is_whole($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -537,7 +570,7 @@ sub decimalHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a decimal number." unless(is_decimal($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a decimal number.\n", show_trace => 1) unless(is_decimal($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -550,7 +583,7 @@ sub realHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a real number." unless(is_real($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a real number.\n", show_trace => 1) unless(is_real($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -563,7 +596,7 @@ sub characterHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a single character." unless((is_string($argument)) and ($argument =~ /^\w$/));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a single character.\n", show_trace => 1) unless((is_string($argument)) and ($argument =~ /^.$/));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -576,7 +609,7 @@ sub stringHandler {
 	my $attribute = shift(@{$attrRef});
 	my $argument = shift(@{$argRef});
 	# all we have to check is that the first argument is of the appropriate type:
-	throw Exception::ParamError "$sub: Argument number $dracula must be a string." unless(is_string($argument));
+	throw Exception::ParamError(error => "$sub: Argument number $dracula must be a string.\n", show_trace => 1) unless(is_string($argument));
 	# put $opt back on the front if it's there:
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;
@@ -588,7 +621,7 @@ sub listHandler {
 	my ($sub, $argRef, $attrRef, $opt) = @_;
 	my $attribute = shift(@{$attrRef});
 	# the list handler is just like the other handler (for now) except that it slurps up all of the arguments.
-	throw Exception "$sub: Improper use of list argument definition, list must come at the end of all other arguments" if(scalar(@{$attrRef}));
+	throw Exception::RuntimeError(error => "$sub: Improper use of list argument definition, list must come at the end of all other arguments\n", show_trace => 1) if(scalar(@{$attrRef}));
 	$dracula = 1;
 }
 
@@ -611,9 +644,9 @@ sub defaultHandler {
 	my $argument = shift(@{$argRef});
 	# this handles the case where the attribute is some kind of reference (either blessed, or not).
 	if(blessed($argument)) { # it's an object.
-		throw Exception::ParamError "$sub: Argument number $dracula must be an instance of class $attribute or a subclass" unless( $argument->isa( $attribute ) );
+		throw Exception::ParamError(error => "$sub: Argument number $dracula must be an instance of class $attribute or a subclass\n", show_trace => 1) unless( $argument->isa( $attribute ) );
 	} else { # it's a normal reference
-		throw Exception::ParamError "$sub: Argument number $dracula must be a reference of type $attribute" unless( ref($argument) eq $attribute );
+		throw Exception::ParamError(error => "$sub: Argument number $dracula must be a reference of type $attribute\n", show_trace => 1) unless( ref($argument) eq $attribute );
 	}
 	unshift(@{$attrRef}, $opt) if($opt);
 	$dracula++;

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 #       Perl Makefile for Attribute-Method-Typeable
-#       $Id: Makefile.PL,v 1.5 2004/03/27 21:43:29 phaedrus Exp $
+#       $Id: Makefile.PL,v 1.6 2004/10/14 22:42:03 phaedrus Exp $
 #
 #	Invocation:
 #		$ perl Makefile.PL                  # interactive behaviour
@@ -39,15 +39,16 @@ use ExtUtils::AutoInstall (
 
 						   # core modules; may also be 'all'
 						   -core           => {
-											   	Attribute::Handlers			=> '',
-												Data::Types					=> '',
+											   	Attribute::Handlers			=> 0.78,
+												Data::Types					=> 0.05,
 												Exception::Class	  		=> 1.16,
-												Hook::WrapSub               => '',
-												Scalar::Util				=> '',
+												Hook::WrapSub               => 0.03,
+												Scalar::Util				=> 1.14,
+												Test::SimpleUnit			=> 1.21,
 						   },
 	
 						   'Use as a Mixin'        => {
-												mixin					    => '',
+												mixin					    => 0.04,
 						   },
 	);
 

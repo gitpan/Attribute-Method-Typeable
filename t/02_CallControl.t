@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 #		Test script for Attribute::Method::Typeable
-#		$Id: 02_CallControl.t,v 1.3 2004/03/28 23:17:28 phaedrus Exp $
+#		$Id: 02_CallControl.t,v 1.4 2004/10/14 22:43:33 phaedrus Exp $
 #
 #		Before `make install' is performed this script should be runnable with
 #		`make test'. After `make install' it should work as `perl test.pl'
@@ -70,7 +70,7 @@ sub abstractMethodB : Virtual() {
 
 package ClassB;
 
-my $mixinLoaded = eval { require mixin; return 1; };
+$mixinLoaded = eval { require mixin; return 1; };
 if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
 else { use base qw{Attribute::Method::Typeable}; }
 
@@ -104,7 +104,7 @@ sub methodC : Public {
 package ClassC;
 
 
-my $mixinLoaded = eval { require mixin; return 1; };
+$mixinLoaded = eval { require mixin; return 1; };
 if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
 else { use base qw{Attribute::Method::Typeable}; }
 
