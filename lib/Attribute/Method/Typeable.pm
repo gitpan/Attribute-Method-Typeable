@@ -236,8 +236,8 @@ BEGIN {
 	require 5.006_001;
     use vars qw{$VERSION $RCSID};
   
-    $VERSION    = do { my @r = (q$Revision: 1.8 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
-    $RCSID      = q$Id: Typeable.pm,v 1.8 2004/10/15 00:21:31 phaedrus Exp $;
+    $VERSION    = do { my @r = (q$Revision: 1.9 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+    $RCSID      = q$Id: Typeable.pm,v 1.9 2004/10/20 21:37:30 phaedrus Exp $;
 
 	# Ah, blessed...
     use Scalar::Util qw{blessed};
@@ -289,7 +289,7 @@ our $dracula = 1;
 ###############################################################################
 # name: Function
 ###############################################################################
-sub Function :ATTR(CODE) {
+sub UNIVERSAL::Function :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
 
     my @attributes = attributeExtract($data);
@@ -303,7 +303,7 @@ sub Function :ATTR(CODE) {
 ###############################################################################
 # name: Abstract
 ###############################################################################
-sub Abstract :ATTR(CODE) {
+sub UNIVERSAL::Abstract :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
     my $before = sub {
 		my @arguments = @_;
@@ -319,7 +319,7 @@ sub Abstract :ATTR(CODE) {
 ###############################################################################
 # name: Virtual
 ###############################################################################
-sub Virtual :ATTR(CODE) {
+sub UNIVERSAL::Virtual :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
     my $before = sub {
 		my @arguments = @_;
@@ -335,7 +335,7 @@ sub Virtual :ATTR(CODE) {
 ###############################################################################
 # name: Constructor
 ###############################################################################
-sub Constructor :ATTR(CODE) {
+sub UNIVERSAL::Constructor :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
 
     my @attributes = attributeExtract($data);
@@ -355,7 +355,7 @@ sub Constructor :ATTR(CODE) {
 ###############################################################################
 # name: Class
 ###############################################################################
-sub Class :ATTR(CODE) {
+sub UNIVERSAL::Class :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
 
     my @attributes = attributeExtract($data);
@@ -374,7 +374,7 @@ sub Class :ATTR(CODE) {
 ###############################################################################
 # name: Public
 ###############################################################################
-sub Public : ATTR(CODE) {
+sub UNIVERSAL::Public : ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
     my @attributes = attributeExtract($data);
 
@@ -389,7 +389,7 @@ sub Public : ATTR(CODE) {
 ###############################################################################
 # name: Protected
 ###############################################################################
-sub Protected :ATTR(CODE) {
+sub UNIVERSAL::Protected :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
     my @attributes = attributeExtract($data);
 
@@ -407,7 +407,7 @@ sub Protected :ATTR(CODE) {
 ###############################################################################
 # name: Private
 ###############################################################################
-sub Private :ATTR(CODE) {
+sub UNIVERSAL::Private :ATTR(CODE) {
     my ($package, $symbol, $referent, $attr, $data, $phase) = @_;
     my @attributes = attributeExtract($data);
     my $before = sub {
@@ -422,7 +422,7 @@ sub Private :ATTR(CODE) {
 }
 
 ### WTF: If I remove this, then Private attributes (or whatever is defined *last*) will not work through mixin.
-sub Throwaway :ATTR(CODE){}
+#sub Throwaway :ATTR(CODE){}
 
 ###############################################################################
 ###  P R I V A T E   F U N C T I O N S 

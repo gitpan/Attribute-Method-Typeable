@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 #		Test script for Attribute::Method::Typeable
-#		$Id: 02_CallControl.t,v 1.4 2004/10/14 22:43:33 phaedrus Exp $
+#		$Id: 02_CallControl.t,v 1.5 2004/10/20 21:37:30 phaedrus Exp $
 #
 #		Before `make install' is performed this script should be runnable with
 #		`make test'. After `make install' it should work as `perl test.pl'
@@ -13,9 +13,12 @@
 # test classes:
 
 package ClassA;
-my $mixinLoaded = eval { require mixin; return 1; };
-if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
-else { use base qw{Attribute::Method::Typeable}; }
+
+BEGIN {
+	my $mixinLoaded = eval { require mixin; return 1; };
+	if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
+	else { require base; base->import('Attribute::Method::Typeable'); }
+}
 
 use strict;
 
@@ -70,9 +73,12 @@ sub abstractMethodB : Virtual() {
 
 package ClassB;
 
-$mixinLoaded = eval { require mixin; return 1; };
-if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
-else { use base qw{Attribute::Method::Typeable}; }
+
+BEGIN {
+	my $mixinLoaded = eval { require mixin; return 1; };
+	if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
+	else { require base; base->import('Attribute::Method::Typeable'); }
+}
 
 use base qw{ClassA};
 
@@ -104,9 +110,11 @@ sub methodC : Public {
 package ClassC;
 
 
-$mixinLoaded = eval { require mixin; return 1; };
-if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
-else { use base qw{Attribute::Method::Typeable}; }
+BEGIN {
+	my $mixinLoaded = eval { require mixin; return 1; };
+	if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
+	else { require base; base->import('Attribute::Method::Typeable'); }
+}
 
 use base qw{ClassA};
 

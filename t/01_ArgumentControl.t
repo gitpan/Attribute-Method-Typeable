@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 #		Test script for Attribute::Method::Typeable
-#		$Id: 01_ArgumentControl.t,v 1.4 2004/03/28 23:17:28 phaedrus Exp $
+#		$Id: 01_ArgumentControl.t,v 1.5 2004/10/20 21:37:30 phaedrus Exp $
 #
 #		Before `make install' is performed this script should be runnable with
 #		`make test'. After `make install' it should work as `perl test.pl'
@@ -14,9 +14,11 @@
 
 package TestPackage;
 
-my $mixinLoaded = eval { require mixin; return 1; };
-if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
-else { use base qw{Attribute::Method::Typeable}; }
+BEGIN {
+	my $mixinLoaded = eval { require mixin; return 1; };
+	if($mixinLoaded) { mixin->import('Attribute::Method::Typeable'); }
+	else { require base; base->import('Attribute::Method::Typeable'); }
+}
 
 use strict;
 # used for testing basic function usage
