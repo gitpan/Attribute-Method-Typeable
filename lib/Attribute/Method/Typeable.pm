@@ -205,8 +205,8 @@ BEGIN {
 	require 5.006_001;
     use vars qw{$VERSION $RCSID};
   
-    $VERSION    = do { my @r = (q$Revision: 1.6 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
-    $RCSID      = q$Id: Typeable.pm,v 1.6 2004/03/28 23:21:09 phaedrus Exp $;
+    $VERSION    = do { my @r = (q$Revision: 1.7 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+    $RCSID      = q$Id: Typeable.pm,v 1.7 2004/08/30 23:58:03 phaedrus Exp $;
 
 	# Ah, blessed...
     use Scalar::Util qw{blessed};
@@ -447,6 +447,7 @@ sub argumentCheck {
 
 		# do we have any arguments?
 		if(scalar(@arguments)) {
+			$arguments[0] = '' unless(defined($arguments[0])); #fix for undefined argument bug.
 			my $handlerSub = exists($attributeHandlers{$attributes[0]}) ? $attributeHandlers{$attributes[0]} : 'defaultHandler';
 			# call that attribute handler with the argument list.
 			no strict 'refs';
